@@ -1,35 +1,51 @@
 require 'nokogiri'
 require 'pry'
+require 'colorize'
+require_relative 'comment'
+require_relative 'post_scraper'
+
+class MissingItem < StandardError
+end
+
 
 class Post
+	include PostScraper
 
-	def initialize(doc)
-    @comments = []
-		@title = doc.search('.title > a').map { |span| span.inner_text } #nokogiri grab title
-		@url = doc.search('.title > a').map { |link| link['href'] } #nokogiri grab url
-		@item_id = doc.search('center:first-child > a').map { |id| id['id'].match(/w+/) } #nokogiri grab points
-		@points = doc.search('.score').map { |span| span.inner_text.match(/\w+/) }#nokogiri grab item_id
+	attr_reader :comments
+
+	def initialize(args)
+		begin
+	    @comments = args[:comments]
+			@title = args[:title]
+			@url = args[:url]
+			@item_id = args[:item_id]
+			@points = args[:points]
+		rescue
+			raise MissingItem, "Please provide :comments, :title, :url, :item_id, and :points"
+		end
 	end
   
+
+  def to_s
+    str = "#{@title.blue} |||| #{@url.blue} |||| #{@item_id} |||| #{@points.red}"
+    @comments.each { |comment| str << comment.to_s }
+    str
+  end
+
   # returns a list of comments
 	def comments
     @comments
-		
 	end
   
   # adds comment to comment list
-	def add_comment(comment, args)
+	def add_comment(comment)
     
-    @comments[get_comment_idx(args)] #<< comment
-  end
-
-  private
-  def get_comment_idx(args)
-  	binding.pry
-  	return @item_id.find_index(args[:id]) if args[:id] != nil
+    @comments << comment
   end
 
 end
 
 
-Post.new(Nokogiri::HTML(File.open('front_page.html'))).add_comment("fasdf",id:"9500066")
+post =  PostScraper.create_from_hackernews('post.html')
+post.add_comment(Comment.new("I am the User!!!!", "This is My Comment Phfaosidhfoaudsbyfiabsdfoyabsdfoasbdoyucavsdovasdcasdvk"))
+puts post
