@@ -1,12 +1,13 @@
 require 'colorize'
 require 'nokogiri'
+require 'open-uri'
 require_relative 'post_scraper'
 
 class NoNokogiriFileProvided < StandardError
 end
 
-module PostScraper
-class << self  
+class PostScraper
+
 	def grab_title
     @doc.search('.title > a').map { |span| span.inner_text }.first #nokogiri grab title
 	end
@@ -38,15 +39,17 @@ class << self
 	  user.each_with_index { |user, idx| comments << Comment.new(user, comment[idx]) }	
 	  comments			
   end
-end
+	
   def self.create_from_hackernews(doc)
   	raise NoNokogiriFileProvided, "convert file to nokogiri" if !File.file?(doc)
     @doc = Nokogiri::HTML(File.open(doc))
-    Post.new({comments: load_comments,
-    	       title: grab_title,
-    	       url: grab_url,
-    	       item_id: grab_item_id,
-    	       points: grab_points})
+    type_of_post = get_post_type(@doc) #return the class of the post type
+    search_key = new(type_of_post)
+    Post.new({comments: search_key.load_comments,
+    	       title: search_key.grab_title,
+    	       url: search_key.grab_url,
+    	       item_id: search_key.grab_item_id,
+    	       points: search_key.grab_points})
   end
 
 end 

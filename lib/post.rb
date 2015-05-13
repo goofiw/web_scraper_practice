@@ -8,8 +8,9 @@ class MissingItem < StandardError
 end
 
 
+require_relative 'post_scraper'
+
 class Post
-	include PostScraper
 
 	attr_reader :comments
 
@@ -40,12 +41,10 @@ class Post
   # adds comment to comment list
 	def add_comment(comment)
     
+    
     @comments << comment
   end
 
 end
 
 
-post =  PostScraper.create_from_hackernews('post.html')
-post.add_comment(Comment.new("I am the User!!!!", "This is My Comment Phfaosidhfoaudsbyfiabsdfoyabsdfoasbdoyucavsdovasdcasdvk"))
-puts post
